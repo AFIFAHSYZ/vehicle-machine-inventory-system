@@ -1,0 +1,253 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root{
+    --bg1: #f7f7ff;
+    --bg2: #f2f6ff;
+
+    --text: #1f2430;
+    --muted: #5f6776;
+
+    --card: rgba(255,255,255,0.78);
+    --card-border: rgba(120, 120, 160, 0.20);
+
+    --primary1: #6C63FF;
+    --primary2: #854AF0;
+
+    --shadow: 0 18px 50px rgba(25, 30, 60, 0.12);
+    --shadow2: 0 10px 22px rgba(25, 30, 60, 0.10);
+}
+
+body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    text-align: center;
+    color: var(--text);
+
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    /* Soft modern background */
+    background:
+        radial-gradient(900px 420px at 20% 10%, rgba(108, 99, 255, 0.14), transparent 60%),
+        radial-gradient(900px 420px at 80% 15%, rgba(133, 74, 240, 0.14), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+}
+
+header, main, footer {
+    width: min(980px, calc(100% - 2rem));
+    margin: 0 auto;
+}
+
+header {
+    padding: 3rem 0 1.25rem;
+}
+
+header h1 {
+    font-size: clamp(1.9rem, 3vw, 2.6rem);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 0.75rem;
+}
+
+header p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+main {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem 0 2rem;
+}
+
+main > p {
+    display: none; 
+}
+
+main::before{
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+}
+
+main .cta-buttons {
+    display: grid;
+    gap: 1rem;
+    justify-items: center;
+
+    padding: 2rem;
+    border-radius: 22px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+
+    width: min(560px, 100%);
+}
+
+footer {
+    padding: 1.25rem 0 2rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+/* ================================
+   Auth Pages (Login/Register)
+================================== */
+
+.auth-card{
+    width: min(560px, 100%);
+    margin: 0 auto;
+    padding: 2rem;
+    border-radius: 22px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+    text-align: left;
+}
+
+.auth-card h2{
+    font-size: 1.5rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.35rem;
+    text-align: center;
+}
+
+.auth-subtitle{
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    font-size: 0.98rem;
+}
+
+.form-grid{
+    display: grid;
+    gap: 1rem;
+}
+
+.form-row{
+    display: grid;
+    gap: 0.45rem;
+}
+
+label{
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #2a2f3a;
+}
+
+.input{
+    width: 100%;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(120, 120, 160, 0.25);
+    background: rgba(255,255,255,0.85);
+    color: var(--text);
+    font-size: 1rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+}
+
+.input::placeholder{
+    color: rgba(95, 103, 118, 0.75);
+}
+
+.input:focus{
+    outline: none;
+    border-color: rgba(108, 99, 255, 0.55);
+    box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.18);
+}
+
+.helper{
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.alert{
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    line-height: 1.45;
+    font-size: 0.95rem;
+    border: 1px solid;
+}
+
+.alert-error{
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.22);
+    color: #991b1b;
+}
+
+.alert-success{
+    background: rgba(16, 185, 129, 0.10);
+    border-color: rgba(16, 185, 129, 0.22);
+    color: #065f46;
+}
+
+.auth-actions{
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+.btn-primary{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.95rem 1.2rem;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+
+    color: #fff;
+    font-weight: 800;
+    font-size: 1rem;
+
+    background: linear-gradient(135deg, var(--primary1), var(--primary2));
+    box-shadow: 0 10px 20px rgba(108, 99, 255, 0.25);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.btn-primary:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 14px 26px rgba(108, 99, 255, 0.35);
+    filter: brightness(1.02);
+}
+
+.btn-primary:active{
+    transform: translateY(0px) scale(0.99);
+}
+
+.link-row{
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.link-row a{
+    color: #4f46e5;
+    text-decoration: none;
+    font-weight: 800;
+}
+
+.link-row a:hover{
+    text-decoration: underline;
+}
+
+/* Optional: place card centered nicely */
+.auth-main{
+    flex: 1;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem 0 2rem;
+}
