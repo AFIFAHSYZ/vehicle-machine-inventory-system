@@ -362,11 +362,11 @@ $_SESSION['role'] = 'guest';
                 <span class="icon">🏠</span>
                 <span>Dashboard</span>
             </a>
-            <a href="#">
+            <a href="guest_vehicle.php">
                 <span class="icon">🚗</span>
                 <span>Vehicles</span>
             </a>
-            <a href="#">
+            <a href="guest_machine.php">
                 <span class="icon">🏗️</span>
                 <span>Machines</span>
             </a>
@@ -378,7 +378,7 @@ $_SESSION['role'] = 'guest';
                 <span class="badge">GUEST</span>
             </div>
             <a class="btn secondary" href="../login.php">Login</a>
-            <a class="btn secondary" href="../index.php">Exit</a>
+            <a class="btn secondary" href="../index.php">Back</a>
 
         </div>
     </aside>
