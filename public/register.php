@@ -1,15 +1,13 @@
 <?php
 session_start();
-
-require_once __DIR__ . "../../config/db.php"; 
-
+require_once __DIR__ . "/../config/db.php";
 $error = "";
 $success = "";
 
-
+// Load companies
 $companies = [];
 try {
-    $stmtCompanies = $pdo->query('SELECT companyid, companyname FROM company ORDER BY companyname ASC');
+    $stmtCompanies = $pdo->query("SELECT companyid, companyname FROM company ORDER BY companyname ASC");
     $companies = $stmtCompanies->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $error = "Failed to load companies: " . $e->getMessage();
@@ -18,7 +16,7 @@ try {
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $fullName  = trim($_POST["full_name"] ?? "");
     $email     = trim($_POST["email"] ?? "");
-    $role      = trim($_POST["role"] ?? "User");
+    $role      = trim($_POST["role"] ?? "guest"); // you said roles: guest, authorized user
     $companyId = (int)($_POST["company_id"] ?? 0);
 
     $passwordInput = $_POST["password"] ?? "";
@@ -32,16 +30,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = "Password must be at least 6 characters.";
     } elseif ($passwordInput !== $confirm) {
         $error = "Passwords do not match.";
+    } elseif (!in_array($role, ["guest", "authorized user"], true)) {
+        $error = "Invalid role. Use 'guest' or 'authorized user'.";
     } else {
         try {
-            // Validate CompanyID exists (LOWERCASE table/column)
-            $checkCompany = $pdo->prepare('SELECT 1 FROM company WHERE companyid = :companyid LIMIT 1');
+            // Validate company exists
+            $checkCompany = $pdo->prepare("SELECT 1 FROM company WHERE companyid = :companyid LIMIT 1");
             $checkCompany->execute([":companyid" => $companyId]);
 
             if (!$checkCompany->fetchColumn()) {
                 $error = "Selected company is invalid.";
             } else {
-                $checkEmail = $pdo->prepare('SELECT 1 FROM "User" WHERE "Email" = :email LIMIT 1');
+                // IMPORTANT: your columns are lowercase: email, passwordhash, fullname, role, companyid
+                $checkEmail = $pdo->prepare('SELECT 1 FROM "User" WHERE email = :email LIMIT 1');
                 $checkEmail->execute([":email" => $email]);
 
                 if ($checkEmail->fetchColumn()) {
@@ -49,8 +50,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 } else {
                     $passwordHash = password_hash($passwordInput, PASSWORD_DEFAULT);
 
+                    // Insert using lowercase column names
                     $insert = $pdo->prepare('
-                        INSERT INTO "User" ("PasswordHash","FullName","Email","Role","CompanyID")
+                        INSERT INTO "User" (passwordhash, fullname, email, role, companyid)
                         VALUES (:passwordhash, :fullname, :email, :role, :companyid)
                     ');
 
@@ -119,10 +121,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             <div class="form-row">
                 <label for="role">Role *</label>
-                <input class="input" type="text" id="role" name="role"
-                       placeholder="User"
-                       value="<?= htmlspecialchars($_POST["role"] ?? "User") ?>"
-                       required>
+                <select class="input" id="role" name="role" required>
+                    <option value="guest" <?= (($_POST["role"] ?? "guest") === "guest") ? "selected" : "" ?>>guest</option>
+                    <option value="authorized user" <?= (($_POST["role"] ?? "") === "authorized user") ? "selected" : "" ?>>authorized user</option>
+                </select>
             </div>
 
             <div class="form-row">
