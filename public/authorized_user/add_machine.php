@@ -248,7 +248,7 @@ $activeTab = $mode;
                         </div>
 
                         <div>
-                            <label>Marking No</label>
+                            <label>Markin No</label>
                             <input class="input" name="markingno" value="<?= htmlspecialchars($activeTab==="drill" ? ($_POST["markingno"] ?? "") : "") ?>"
                                    placeholder="Optional but recommended">
                         </div>
