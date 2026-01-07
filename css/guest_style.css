@@ -524,3 +524,42 @@
             .sidebar-footer{position:relative;left:auto;right:auto;bottom:auto;margin-top:1rem;}
             .grid{grid-template-columns:1fr;}
         }
+
+                @media print {
+            .sidebar, .header, .filters, .pagination, .no-print { display:none !important; }
+            .app { display:block !important; }
+            .main { padding:0 !important; }
+            .card { box-shadow:none !important; border:none !important; }
+            table { min-width:0 !important; }
+        }
+
+        .pagination{
+            margin-top:1rem;
+            display:flex;
+            gap:.6rem;
+            justify-content:space-between;
+            align-items:center;
+            flex-wrap:wrap;
+            color:var(--muted);
+            font-size:.92rem;
+        }
+        .page-links{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap}
+        .page-btn{
+            text-decoration:none;
+            padding:.45rem .7rem;
+            border-radius:999px;
+            border:1px solid rgba(120,120,160,.25);
+            background:rgba(255,255,255,.7);
+            color:#121726;
+            font-weight:900;
+            font-size:.88rem;
+        }
+        .page-btn.active{
+            background: linear-gradient(135deg,var(--primary1),var(--primary2));
+            border-color:transparent;
+            color:#fff;
+        }
+        .page-btn.disabled{pointer-events:none;opacity:.5;}
+  table td, table th { position: relative; }
+  table td .btn, table td a { position: relative; z-index: 10; pointer-events: auto; }
+  .card::before, .card::after { pointer-events: none; }
