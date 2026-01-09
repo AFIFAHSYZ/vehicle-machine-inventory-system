@@ -40,6 +40,18 @@
             <span>Add Machine</span>
         </a>
 
+        <a href="drill.php"
+           class="<?= $currentPage === 'drill.php' ? 'active' : '' ?>">
+            <span class="icon"><i class="fa-solid fa-screwdriver"></i></span>
+            <span>Drill</span>
+        </a>
+
+        <a href="add_drill.php"
+           class="<?= $currentPage === 'add_drill.php' ? 'active' : '' ?>">
+            <span class="icon"><i class="fa-solid fa-plus"></i></span>
+            <span>Add Drill</span>
+        </a>
+
         <a href="approve.php"
            class="<?= $currentPage === 'approve.php' ? 'active' : '' ?>">
             <span class="icon"><i class="fa-solid fa-check"></i></span>
