@@ -127,10 +127,6 @@ try {
                     <label>Type</label>
                     <select class="input" name="type">
                         <option value="">All</option>
-                        <option value="">Theodolite</option>
-                        <option value="">Dumping Level</option>
-                        <option value="">Total Station</option>
-
                         <?php foreach ($types as $t): ?>
                             <option value="<?= htmlspecialchars($t) ?>" <?= $type === $t ? "selected" : "" ?>>
                                 <?= htmlspecialchars($t) ?>
@@ -151,7 +147,7 @@ try {
             <table>
                 <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>No.</th>
                     <th>Serial</th>
                     <th>Company</th>
                     <th>Type</th>
@@ -167,23 +163,25 @@ try {
                 </thead>
                 <tbody>
                 <?php if (!$machines): ?>
-                    <tr><td colspan="12" style="color:var(--muted)">No machines found.</td></tr>
-                <?php else: foreach ($machines as $m): ?>
-                    <tr>
-                        <td><?= (int)$m["equipmentid"] ?></td>
-                        <td><b><?= htmlspecialchars($m["serialno"]) ?></b></td>
-                        <td><?= htmlspecialchars($m["companyname"]) ?></td>
-                        <td><?= htmlspecialchars($m["equipmenttype"] ?? "") ?></td>
-                        <td><?= htmlspecialchars($m["model"] ?? "") ?></td>
-                        <td><?= htmlspecialchars($m["codeno"] ?? "") ?></td>
-                        <td><?= htmlspecialchars($m["status"] ?? "") ?></td>
-                        <td><?= htmlspecialchars($m["location"] ?? "") ?></td>
-                        <td><?= htmlspecialchars($m["datecalibration"] ?? "") ?></td>
-                        <td><?= htmlspecialchars($m["nextcalibration"] ?? "") ?></td>
-                        <td><?= htmlspecialchars($m["certificationno"] ?? "") ?></td>
-                        <td><?= htmlspecialchars($m["updateddate"] ?? $m["createddate"] ?? "") ?></td>
-                    </tr>
-                <?php endforeach; endif; ?>
+                    <tr><td colspan="12" class="muted">No records found.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($machines as $idx => $m): ?>
+                        <tr>
+                            <td><?= (int)($idx + 1) ?></td>
+                            <td><b><?= htmlspecialchars($m["serialno"] ?? "") ?></b></td>
+                            <td><?= htmlspecialchars($m["companyname"] ?? "") ?></td>
+                            <td><?= htmlspecialchars($m["equipmenttype"] ?? "") ?></td>
+                            <td><?= htmlspecialchars($m["model"] ?? "") ?></td>
+                            <td><?= htmlspecialchars($m["codeno"] ?? "") ?></td>
+                            <td><?= htmlspecialchars($m["status"] ?? "") ?></td>
+                            <td><?= htmlspecialchars($m["location"] ?? "") ?></td>
+                            <td><?= htmlspecialchars($m["datecalibration"] ?? "") ?></td>
+                            <td><?= htmlspecialchars($m["nextcalibration"] ?? "") ?></td>
+                            <td><?= htmlspecialchars($m["certificationno"] ?? "") ?></td>
+                            <td><?= htmlspecialchars($m["updateddate"] ?? $m["createddate"] ?? "") ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
                 </tbody>
             </table>
         </div>
