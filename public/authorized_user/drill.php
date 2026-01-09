@@ -22,14 +22,11 @@ $companies = [];
 try {
     $cStmt = $pdo->query("SELECT companyid, companyname FROM company ORDER BY companyname ASC");
     $companies = $cStmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Throwable $e) {
-    // If company table not available, filters will still work with companyid typed manually (but we don't show that)
-}
+} catch (Throwable $e) { /* ignore */ }
 
 $where = [];
 $params = [];
 
-// search over fields
 if ($q !== "") {
     $where[] = "(d.markingno ILIKE :q OR d.location ILIKE :q OR d.status ILIKE :q OR d.itemdescription ILIKE :q OR CAST(d.drillid AS TEXT) ILIKE :q)";
     $params[":q"] = "%{$q}%";
@@ -48,21 +45,14 @@ if ($companyid > 0) {
 $whereSql = $where ? ("WHERE " . implode(" AND ", $where)) : "";
 
 // Count for pagination
-$countSql = "
-    SELECT COUNT(*)
-    FROM drill d
-    {$whereSql}
-";
-$countStmt = $pdo->prepare($countSql);
+$countStmt = $pdo->prepare("SELECT COUNT(*) FROM drill d {$whereSql}");
 $countStmt->execute($params);
 $total = (int)$countStmt->fetchColumn();
 $totalPages = max(1, (int)ceil($total / $perPage));
 
 // Data query
 $listSql = "
-    SELECT
-        d.*,
-        c.companyname
+    SELECT d.*, c.companyname
     FROM drill d
     LEFT JOIN company c ON c.companyid = d.companyid
     {$whereSql}
@@ -82,6 +72,37 @@ function buildQuery(array $extra = []): string {
     }
     return http_build_query($base);
 }
+
+/* Badge helpers */
+function badgeClassStatus(string $status): string {
+    $s = strtoupper(trim($status));
+    return match ($s) {
+        "IN USE"   => "badge green",
+        "DAMAGE"   => "badge red",
+        "DISPOSAL" => "badge gray",
+        "SOLD"     => "badge blue",
+        "LOST"     => "badge orange",
+        default    => "badge",
+    };
+}
+function badgeClassApproval(string $st): string {
+    $s = strtoupper(trim($st));
+    return match ($s) {
+        "APPROVED" => "badge green",
+        "REJECTED" => "badge red",
+        "PENDING"  => "badge orange",
+        default    => "badge",
+    };
+}
+function fmtDateDMY($v): string {
+    if (!$v) return "—";
+    try {
+        $dt = new DateTime((string)$v);
+        return $dt->format("d-m-Y");
+    } catch (Throwable $e) {
+        return "—";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -94,104 +115,17 @@ function buildQuery(array $extra = []): string {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
 
     <style>
-        /* Minimal page-specific styles, reusing your global style-guide.css/guest_style.css */
-        .header{
-            background:var(--card);
-            border:1px solid var(--border);
-            border-radius:var(--radius);
-            box-shadow:var(--shadow);
-            padding:1.2rem;
-            display:flex; gap:1rem; align-items:flex-start; justify-content:space-between;
-            flex-wrap:wrap;
-        }
-        .sub{color:var(--muted);margin-top:.25rem;line-height:1.5}
-        .actions{display:flex;gap:.6rem;flex-wrap:wrap}
-
-        .card{
-            margin-top:1rem;
-            background:var(--card);
-            border:1px solid var(--border);
-            border-radius:var(--radius);
-            box-shadow:var(--shadow2);
-            padding:1rem;
-            overflow:hidden;
-            position:relative;
-        }
-        .filters{
-            display:grid; gap:.8rem;
-            grid-template-columns: 1.2fr .8fr .8fr auto;
-            align-items:end;
-        }
-        label{font-weight:900;font-size:.9rem}
-        .input{
-            width:100%; padding:.8rem .9rem;
-            border-radius:14px; border:1px solid rgba(120,120,160,.25);
-            background:rgba(255,255,255,.92);
-        }
-        .input:focus{outline:none; border-color:rgba(108,99,255,.55); box-shadow:0 0 0 4px rgba(108,99,255,.18)}
-        .tablewrap{overflow:auto; margin-top:1rem; border-radius:14px; border:1px solid rgba(120,120,160,.18); background:#fff}
-        table{width:100%; border-collapse:separate; border-spacing:0; min-width:1200px; background:#fff}
-        thead th{
-            text-align:left; font-size:.85rem; color:#3a4152;
-            background:#f6f7ff; border-bottom:1px solid rgba(120,120,160,.18);
-            padding:.85rem .85rem;
-            position:sticky; top:0;
-        }
-        tbody td{
-            padding:.85rem .85rem;
-            border-bottom:1px solid rgba(120,120,160,.14);
-            vertical-align:top;
-            font-size:.93rem;
-        }
-        tbody tr:hover{background:#fafbff}
-        .muted{color:var(--muted); font-size:.9rem}
-        .count{margin-top:.75rem;color:var(--muted);font-size:.92rem}
-
-        .statuspill{
-            display:inline-block; padding:.25rem .55rem; border-radius:999px;
-            font-weight:900; font-size:.78rem;
-            background:rgba(108,99,255,0.12); border:1px solid rgba(108,99,255,0.20);
-            white-space:nowrap;
-        }
-        .apppill{
-            display:inline-block; padding:.25rem .55rem; border-radius:999px;
-            font-weight:900; font-size:.78rem;
-            background:rgba(16,185,129,.10); border:1px solid rgba(16,185,129,.22);
-            white-space:nowrap;
-        }
-
-        .pagination{
-            margin-top:1rem;
-            display:flex;
-            gap:.6rem;
-            justify-content:space-between;
-            align-items:center;
-            flex-wrap:wrap;
-            color:var(--muted);
-            font-size:.92rem;
-        }
-        .page-links{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap}
-        .page-btn{
-            text-decoration:none;
-            padding:.45rem .7rem;
-            border-radius:999px;
-            border:1px solid rgba(120,120,160,.25);
-            background:rgba(255,255,255,.7);
-            color:#121726;
-            font-weight:900;
-            font-size:.88rem;
-        }
-        .page-btn.active{
-            background: linear-gradient(135deg,var(--primary1),var(--primary2));
-            border-color:transparent;
-            color:#fff;
-        }
-        .page-btn.disabled{pointer-events:none;opacity:.5;}
-
-        @media (max-width: 980px){
-            .filters{grid-template-columns:1fr;}
-            table{min-width:980px}
-        }
+        .tablewrap table{border-collapse: collapse;}
+        .tablewrap thead th{padding: .55rem .65rem;font-size: .82rem;white-space: nowrap;}
+        .tablewrap tbody td{padding: .45rem .65rem;font-size: .88rem;vertical-align: middle;}
+        .tablewrap tbody tr:hover{background: rgba(108,99,255,.06);}
+        .badge{display:inline-block;padding: .18rem .55rem;border-radius: 999px;font-size: .78rem;font-weight: 900;letter-spacing: .3px;text-transform: uppercase;border: 1px solid rgba(120,120,160,.22);background: rgba(17,24,39,.06);color: #111827;white-space: nowrap;}
+        .badge.green{ background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.25); color:#065f46; }
+        .badge.red{ background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.25); color:#991b1b; }
+        .badge.orange{ background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.30); color:#92400e; }
+        .badge.blue{ background: rgba(59,130,246,.12); border-color: rgba(59,130,246,.25); color:#1e40af; }
+        .badge.gray{ background: rgba(107,114,128,.12); border-color: rgba(107,114,128,.25); color:#374151; }
+        a.btn.secondary.compact{padding: .38rem .65rem;font-size: .84rem;border-radius: 12px;white-space: nowrap;}
     </style>
 </head>
 <body>
@@ -206,8 +140,8 @@ function buildQuery(array $extra = []): string {
             </div>
 
             <div class="actions">
-                <a class="btn" href="drill_add.php"><i class="fa-solid fa-plus"></i>&nbsp;Add Drill</a>
-                <a class="btn secondary" href="machine.php"></i>&nbsp;View Machine</a>
+                <a class="btn" href="add_drill.php"><i class="fa-solid fa-plus"></i>&nbsp;Add Drill</a>
+                <a class="btn secondary" href="machine.php">&nbsp;View Machine</a>
             </div>
         </div>
 
@@ -255,7 +189,7 @@ function buildQuery(array $extra = []): string {
                 <table>
                     <thead>
                         <tr>
-                            <th>Drill ID</th>
+                            <th>No.</th>
                             <th>Company</th>
                             <th>Marking No</th>
                             <th>Status</th>
@@ -271,19 +205,26 @@ function buildQuery(array $extra = []): string {
                         <?php if (!$rows): ?>
                             <tr><td colspan="10" class="muted">No records found.</td></tr>
                         <?php else: ?>
-                            <?php foreach ($rows as $r): ?>
+                            <?php foreach ($rows as $idx => $r): ?>
+                                <?php
+                                  $rowNo = $offset + $idx + 1;
+                                  $statusTxt = strtoupper((string)($r["status"] ?? ""));
+                                  $approvalTxt = strtoupper((string)($r["approvalstatus"] ?? ""));
+                                ?>
                                 <tr>
-                                    <td><?= (int)$r["drillid"] ?></td>
+                                    <td><?= (int)$rowNo ?></td>
                                     <td><?= h($r["companyname"] ?? "—") ?></td>
                                     <td><?= h($r["markingno"] ?? "—") ?></td>
-                                    <td><span class="statuspill"><?= h($r["status"] ?? "—") ?></span></td>
+                                    <td><span class="<?= h(badgeClassStatus($statusTxt)) ?>"><?= h($statusTxt ?: "—") ?></span></td>
                                     <td><?= h($r["location"] ?? "—") ?></td>
-                                    <td><?= h($r["dateofpurchase"] ?? "—") ?></td>
-                                    <td><?= h($r["dateofdisposal"] ?? "—") ?></td>
-                                    <td><span class="apppill"><?= h($r["approvalstatus"] ?? "—") ?></span></td>
-                                    <td><?= h($r["updateddate"] ?? $r["createddate"] ?? "—") ?></td>
+                                    <td><?= h(fmtDateDMY($r["dateofpurchase"] ?? null)) ?></td>
+                                    <td><?= h(fmtDateDMY($r["dateofdisposal"] ?? null)) ?></td><td>
+                                    <?php $approvalTxt = strtoupper((string)($r["approvalstatus"] ?? "")); ?>
+                                    <span class="<?= h(badgeClassApproval($approvalTxt)) ?>"><?= h($approvalTxt ?: "—") ?></span>
+                                    </td>
+                                    <td><?= h(fmtDateDMY($r["updateddate"] ?? $r["createddate"] ?? null)) ?></td>
                                     <td>
-                                        <a class="btn secondary" href="drill_info.php?id=<?= (int)$r["drillid"] ?>">View</a>
+                                        <a class="btn secondary compact" href="drill_info.php?id=<?= (int)$r["drillid"] ?>">View</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -308,7 +249,6 @@ function buildQuery(array $extra = []): string {
                         <a class="page-btn <?= $prevDisabled ? "disabled" : "" ?>" href="<?= $prevDisabled ? "#" : h($prevHref) ?>">Prev</a>
 
                         <?php
-                        // show limited window
                         $start = max(1, $page - 2);
                         $end = min($totalPages, $page + 2);
                         for ($p = $start; $p <= $end; $p++):
