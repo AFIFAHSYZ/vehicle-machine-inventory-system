@@ -22,7 +22,6 @@ try {
         ORDER BY equipmenttype ASC
     ")->fetchAll(PDO::FETCH_COLUMN);
 
-    // NOTE: equipment table (new schema) has NO approvalstatus and NO drillspecifics join anymore
     $sql = "
         SELECT
             e.equipmentid,
@@ -100,7 +99,7 @@ try {
             </div>
             <div style="display:flex;gap:.6rem;flex-wrap:wrap">
                 <a class="btn secondary" href="add_machine.php">Add Machine</a>
-                <a class="btn" href="drills_list.php">View Drills</a>
+                <a class="btn" href="drill.php">View Drills</a>
             </div>
         </div>
 
@@ -128,7 +127,6 @@ try {
                     <label>Type</label>
                     <select class="input" name="type">
                         <option value="">All</option>
-                        <option value="">Drill</option>
                         <option value="">Theodolite</option>
                         <option value="">Dumping Level</option>
                         <option value="">Total Station</option>
