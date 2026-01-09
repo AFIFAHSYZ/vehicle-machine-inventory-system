@@ -80,6 +80,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 }
+if ($_SERVER["REQUEST_METHOD"] === "POST" && ($_POST["action"] ?? "") === "delete") {
+    try {
+        $pdo->prepare("DELETE FROM drill WHERE drillid = :id")->execute([":id" => $id]);
+        header("Location: drill.php?msg=deleted");
+        exit;
+    } catch (PDOException $e) {
+        $error = $e->getMessage();
+    }
+}
+
 
 if (($_GET["saved"] ?? "") === "1") {
     $success = "Updated successfully.";
@@ -117,43 +127,6 @@ $TYPE_OPTIONS   = ["CAR", "MOTOR"];
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
 
     <style>
-        .page-title{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;}
-        .top-meta{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.35rem;color:var(--muted);font-size:.92rem;}
-        .chip{display:inline-flex;align-items:center;gap:.45rem;padding:.35rem .65rem;border-radius:999px;border:1px solid rgba(120,120,160,.22);background:rgba(255,255,255,.65);}
-        .chip b{color:var(--text)}
-
-        .layout{display:grid;grid-template-columns: 1fr;gap:1rem;margin-top:1rem;}
-        .panel{background:rgba(255,255,255,.86);border:1px solid rgba(120,120,160,.20);border-radius:18px;padding:1rem;}
-        .panel h3{font-size:1rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;}
-        .divider{height:1px;background: rgba(120,120,160,.16);margin:.9rem 0;}
-
-        .dl{display:grid;grid-template-columns: 170px 1fr;gap:.5rem 1rem;align-items:center;}
-        .dt{color:var(--muted);font-size:.9rem;}
-        .dd{font-weight:900;color:var(--text);}
-        .dd.mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-
-        .value-wrap{display:flex;align-items:center;gap:.5rem;min-height:34px;}
-        .icon-btn{
-            border:none;background:transparent;cursor:pointer;
-            color:rgba(17,24,39,.75);
-            padding:.2rem .35rem;border-radius:10px;
-        }
-        .icon-btn:hover{background:rgba(108,99,255,.10);color:#111827;}
-        .edit{display:none;align-items:center;gap:.5rem;flex-wrap:wrap;}
-        .edit input, .edit select{
-            padding:.55rem .7rem;border-radius:12px;
-            border:1px solid rgba(120,120,160,.25);
-            background:rgba(255,255,255,.92);
-        }
-        .edit input{min-width:220px;}
-        .edit-actions{display:flex;gap:.35rem;}
-        .small-btn{
-            border:none;cursor:pointer;
-            padding:.5rem .65rem;border-radius:12px;
-            font-weight:900;font-size:.85rem;
-        }
-        .save-btn{background:rgba(16,185,129,.14);color:#065f46;border:1px solid rgba(16,185,129,.25);}
-        .cancel-btn{background:rgba(239,68,68,.10);color:#991b1b;border:1px solid rgba(239,68,68,.22);}
 
         @media (max-width: 980px){
             .dl{grid-template-columns:1fr;}
@@ -174,6 +147,15 @@ $TYPE_OPTIONS   = ["CAR", "MOTOR"];
                         <span class="chip"><i class="fa-solid fa-building"></i> <b><?= h($vehicle["companyname"]) ?></b></span>
                         <span class="chip"><i class="fa-solid fa-id-card"></i> <b><?= h($vehicle["platenumber"]) ?></b></span>
                     </div>
+                <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;">
+                    <a class="btn secondary" href="drill.php"><i class="fa-solid fa-arrow-left"></i>&nbsp;Back</a>
+
+                    <form method="POST" style="margin:0" onsubmit="return confirm('Delete this drill record? This cannot be undone.');">
+                        <input type="hidden" name="action" value="delete">
+                        <button class="btn danger" type="submit"><i class="fa-solid fa-trash"></i>&nbsp;Delete</button>
+                    </form>
+                </div>
+
                 </div>
 
             </div>
@@ -188,7 +170,6 @@ $TYPE_OPTIONS   = ["CAR", "MOTOR"];
 
                 <div class="dl">
                     <?php
-                    // Helper to render one editable row
                     function editableTextRow($label, $field, $value, $mono=false){
                         $v = htmlspecialchars((string)$value);
                         $view = ($v === "" ? "—" : $v);
@@ -320,9 +301,6 @@ $TYPE_OPTIONS   = ["CAR", "MOTOR"];
                     </div>
                 </div>
 
-                <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;">
-                    <a class="btn secondary" href="vehicle.php"><i class="fa-solid fa-arrow-left"></i>&nbsp;Back</a>
-                </div>
             </section>
         </div>
     </main>
