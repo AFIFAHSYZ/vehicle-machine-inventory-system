@@ -563,3 +563,52 @@
   table td, table th { position: relative; }
   table td .btn, table td a { position: relative; z-index: 10; pointer-events: auto; }
   .card::before, .card::after { pointer-events: none; }
+
+          .page-title{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;}
+        .top-meta{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.35rem;color:var(--muted);font-size:.92rem;}
+        .chip{display:inline-flex;align-items:center;gap:.45rem;padding:.35rem .65rem;border-radius:999px;border:1px solid rgba(120,120,160,.22);background:rgba(255,255,255,.65);}
+        .chip b{color:var(--text)}
+
+        .layout{display:grid;grid-template-columns: 1fr;gap:1rem;margin-top:1rem;}
+        .panel{background:rgba(255,255,255,.86);border:1px solid rgba(120,120,160,.20);border-radius:18px;padding:1rem;}
+        .panel h3{font-size:1rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;}
+        .divider{height:1px;background: rgba(120,120,160,.16);margin:.9rem 0;}
+
+        .dl{display:grid;grid-template-columns: 170px 1fr;gap:.5rem 1rem;align-items:center;}
+        .dt{color:var(--muted);font-size:.9rem;}
+        .dd{font-weight:900;color:var(--text);}
+        .dd.mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+
+        .value-wrap{display:flex;align-items:center;gap:.5rem;min-height:34px;}
+        .icon-btn{
+            border:none;background:transparent;cursor:pointer;
+            color:rgba(17,24,39,.75);
+            padding:.2rem .35rem;border-radius:10px;
+        }
+        .icon-btn:hover{background:rgba(108,99,255,.10);color:#111827;}
+        .edit{display:none;align-items:center;gap:.5rem;flex-wrap:wrap;}
+        .edit input, .edit select, .edit textarea{
+            padding:.55rem .7rem;border-radius:12px;
+            border:1px solid rgba(120,120,160,.25);
+            background:rgba(255,255,255,.92);
+        }
+        .edit input{min-width:220px;}
+        .edit textarea{min-width:260px;min-height:70px;resize:vertical;}
+        .edit-actions{display:flex;gap:.35rem;}
+        .small-btn{
+            border:none;cursor:pointer;
+            padding:.5rem .65rem;border-radius:12px;
+            font-weight:900;font-size:.85rem;
+        }
+        .save-btn{background:rgba(16,185,129,.14);color:#065f46;border:1px solid rgba(16,185,129,.25);}
+        .cancel-btn{background:rgba(239,68,68,.10);color:#991b1b;border:1px solid rgba(239,68,68,.22);}
+
+        table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}
+        thead th{background:#f6f7ff;text-align:left;padding:.7rem;border-bottom:1px solid rgba(120,120,160,.18);font-size:.85rem}
+        tbody td{padding:.7rem;border-bottom:1px solid rgba(120,120,160,.12);font-size:.92rem;vertical-align:top}
+  .btn.danger{
+    background:#dc2626;
+    color:#fff;
+    border:none;
+  }
+  .btn.danger:hover{ filter:brightness(.95); }
