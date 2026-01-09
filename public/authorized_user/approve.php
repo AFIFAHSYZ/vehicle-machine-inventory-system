@@ -11,11 +11,11 @@ $success = "";
 $userId = $_SESSION["userid"] ?? null;
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $entity = $_POST["entity"] ?? ""; // vehicle|equipment
+    $entity = $_POST["entity"] ?? ""; // vehicle|equipment|drill
     $action = $_POST["action"] ?? ""; // approve|reject
     $id = (int)($_POST["id"] ?? 0);
 
-    if (!in_array($entity, ["vehicle","equipment"], true) || !in_array($action, ["approve","reject"], true) || $id <= 0) {
+    if (!in_array($entity, ["vehicle","equipment","drill"], true) || !in_array($action, ["approve","reject"], true) || $id <= 0) {
         $error = "Invalid request.";
     } else {
         $newStatus = ($action === "approve") ? "approved" : "rejected";
@@ -30,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         updateddate = NOW()
                     WHERE vehicleid = :id
                 ");
-            } else {
+            } elseif ($entity === "equipment") {
                 $stmt = $pdo->prepare("
                     UPDATE equipment
                     SET approvalstatus = :st,
@@ -40,7 +40,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         updateddate = NOW()
                     WHERE equipmentid = :id
                 ");
+            } else { // drill
+                $stmt = $pdo->prepare("
+                    UPDATE drill
+                    SET approvalstatus = :st,
+                        approvedby = :uid,
+                        approveddate = NOW(),
+                        updatedby = :uid,
+                        updateddate = NOW()
+                    WHERE drillid = :id
+                ");
             }
+
             $stmt->execute([":st"=>$newStatus, ":uid"=>$userId, ":id"=>$id]);
             $success = ucfirst($entity) . " #{$id} {$newStatus}.";
         } catch (PDOException $e) {
@@ -53,7 +64,7 @@ $pendingVehicles = $pdo->query("
     SELECT v.vehicleid, v.platenumber, v.createddate, c.companyname
     FROM vehicle v
     JOIN company c ON c.companyid = v.companyid
-    WHERE v.approvalstatus = 'pending'
+    WHERE v.approvalstatus = 'PENDING'
     ORDER BY v.createddate DESC, v.vehicleid DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
@@ -61,8 +72,16 @@ $pendingMachines = $pdo->query("
     SELECT e.equipmentid, e.serialno, e.createddate, e.equipmenttype, c.companyname
     FROM equipment e
     JOIN company c ON c.companyid = e.companyid
-    WHERE e.approvalstatus = 'pending'
+    WHERE e.approvalstatus = 'PENDING'
     ORDER BY e.createddate DESC, e.equipmentid DESC
+")->fetchAll(PDO::FETCH_ASSOC);
+
+$pendingDrills = $pdo->query("
+    SELECT d.drillid, d.markingno, d.createddate, d.status, c.companyname
+    FROM drill d
+    JOIN company c ON c.companyid = d.companyid
+    WHERE d.approvalstatus = 'PENDING'
+    ORDER BY d.createddate DESC, d.drillid DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
@@ -73,8 +92,32 @@ $pendingMachines = $pdo->query("
     <title>Approvals | Authorized</title>
     <link rel="stylesheet" href="../../css/guest_style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-
-</head>
+    <style>
+      .row-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;}
+      .btn.sm{padding:.45rem .7rem;font-size:.85rem;border-radius:12px;font-weight:900;}
+      .btn.approve{background: linear-gradient(135deg, #16a34a, #22c55e);color:#fff;border:none;
+      }
+      .btn.reject{
+        background: linear-gradient(135deg, #b91c1c, #ef4444);
+        color:#fff;
+        border:none;
+      }
+      .btn.approve:hover,
+      .btn.reject:hover{
+        filter:brightness(0.95);
+        transform: translateY(-1px);
+        transition: .15s ease;
+      }
+      .btn.approve:active,
+      .btn.reject:active{
+        transform: translateY(0px);
+      }
+      .btn.approve i,
+      .btn.reject i{
+        margin-right:.35rem;
+      }
+      form{ margin:0; } /* prevents spacing bugs */
+    </style></head>
 <body>
 <div class="app">
 <?php include "sidebar.php";?>
@@ -114,16 +157,20 @@ $pendingMachines = $pdo->query("
                                 <td>
                                     <div class="row-actions">
                                         <form method="POST">
-                                            <input type="hidden" name="entity" value="vehicle">
+                                            <input type="hidden" name="entity" value="drill">
                                             <input type="hidden" name="action" value="approve">
-                                            <input type="hidden" name="id" value="<?= (int)$v["vehicleid"] ?>">
-                                            <button class="btn" type="submit">Approve</button>
+                                            <input type="hidden" name="id" value="<?= (int)$d["drillid"] ?>">
+                                            <button class="btn sm approve" type="submit">
+                                            <i class="fa-solid fa-check"></i> Approve
+                                            </button>
                                         </form>
-                                        <form method="POST" onsubmit="return confirm('Reject this vehicle?');">
-                                            <input type="hidden" name="entity" value="vehicle">
+                                        <form method="POST" onsubmit="return confirm('Reject this drill?');">
+                                            <input type="hidden" name="entity" value="drill">
                                             <input type="hidden" name="action" value="reject">
-                                            <input type="hidden" name="id" value="<?= (int)$v["vehicleid"] ?>">
-                                            <button class="btn reject" type="submit">Reject</button>
+                                            <input type="hidden" name="id" value="<?= (int)$d["drillid"] ?>">
+                                            <button class="btn sm reject" type="submit">
+                                            <i class="fa-solid fa-xmark"></i> Reject
+                                            </button>                                          
                                         </form>
                                     </div>
                                 </td>
@@ -152,16 +199,60 @@ $pendingMachines = $pdo->query("
                                 <td>
                                     <div class="row-actions">
                                         <form method="POST">
-                                            <input type="hidden" name="entity" value="equipment">
+                                            <input type="hidden" name="entity" value="drill">
                                             <input type="hidden" name="action" value="approve">
-                                            <input type="hidden" name="id" value="<?= (int)$m["equipmentid"] ?>">
-                                            <button class="btn" type="submit">Approve</button>
+                                            <input type="hidden" name="id" value="<?= (int)$d["drillid"] ?>">
+                                            <button class="btn sm approve" type="submit">
+                                            <i class="fa-solid fa-check"></i> Approve
+                                            </button>
                                         </form>
-                                        <form method="POST" onsubmit="return confirm('Reject this machine?');">
-                                            <input type="hidden" name="entity" value="equipment">
+                                        <form method="POST" onsubmit="return confirm('Reject this drill?');">
+                                            <input type="hidden" name="entity" value="drill">
                                             <input type="hidden" name="action" value="reject">
-                                            <input type="hidden" name="id" value="<?= (int)$m["equipmentid"] ?>">
-                                            <button class="btn reject" type="submit">Reject</button>
+                                            <input type="hidden" name="id" value="<?= (int)$d["drillid"] ?>">
+                                            <button class="btn sm reject" type="submit">
+                                            <i class="fa-solid fa-xmark"></i> Reject
+                                            </button>                                          
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; endif; ?>
+                        </tbody>
+                    </table>
+
+                    <h3 style="margin:.9rem 0 .6rem">Pending Drills (<?= count($pendingDrills) ?>)</h3>
+                    <table>
+                        <thead>
+                        <tr><th>ID</th><th>Marking No</th><th>Company</th><th>Status</th><th>Submitted</th><th>Action</th></tr>
+                        </thead>
+                        <tbody>
+                        <?php if (!$pendingDrills): ?>
+                            <tr><td colspan="6" style="color:var(--muted)">No pending drills.</td></tr>
+                        <?php else: foreach ($pendingDrills as $d): ?>
+                            <tr>
+                                <td><?= (int)$d["drillid"] ?></td>
+                                <td><b><?= htmlspecialchars($d["markingno"] ?? "") ?></b></td>
+                                <td><?= htmlspecialchars($d["companyname"]) ?></td>
+                                <td><?= htmlspecialchars($d["status"] ?? "") ?></td>
+                                <td><?= htmlspecialchars($d["createddate"] ?? "") ?></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <form method="POST">
+                                            <input type="hidden" name="entity" value="drill">
+                                            <input type="hidden" name="action" value="approve">
+                                            <input type="hidden" name="id" value="<?= (int)$d["drillid"] ?>">
+                                            <button class="btn sm approve" type="submit">
+                                            <i class="fa-solid fa-check"></i> Approve
+                                            </button>
+                                        </form>
+                                        <form method="POST" onsubmit="return confirm('Reject this drill?');">
+                                            <input type="hidden" name="entity" value="drill">
+                                            <input type="hidden" name="action" value="reject">
+                                            <input type="hidden" name="id" value="<?= (int)$d["drillid"] ?>">
+                                            <button class="btn sm reject" type="submit">
+                                            <i class="fa-solid fa-xmark"></i> Reject
+                                            </button>                                          
                                         </form>
                                     </div>
                                 </td>
