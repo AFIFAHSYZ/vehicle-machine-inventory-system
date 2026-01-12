@@ -147,34 +147,14 @@ $added = (string)($_GET["added"] ?? "");
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
 
     <style>
-        .header{
-            background:var(--card);
-            border:1px solid var(--border);
-            border-radius:var(--radius);
-            box-shadow:var(--shadow);
-            padding:1.2rem;
-            display:flex; gap:1rem; align-items:flex-start; justify-content:space-between;
-            flex-wrap:wrap;
-        }
+        .header{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.2rem;display:flex; gap:1rem; align-items:flex-start; justify-content:space-between;flex-wrap:wrap;}
         .sub{color:var(--muted);margin-top:.25rem;line-height:1.5}
         .actions{display:flex;gap:.6rem;flex-wrap:wrap}
-        .card{
-            margin-top:1rem;
-            background:var(--card);
-            border:1px solid var(--border);
-            border-radius:var(--radius);
-            box-shadow:var(--shadow2);
-            padding:1rem;
-            overflow:hidden;
-        }
+        .card{margin-top:1rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow2);padding:1rem;overflow:hidden;}
         .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
         .full{grid-column:1/-1}
         label{font-weight:900;font-size:.9rem}
-        .input{
-            width:100%; padding:.8rem .9rem;
-            border-radius:14px; border:1px solid rgba(120,120,160,.25);
-            background:rgba(255,255,255,.92);
-        }
+        .input{width:100%; padding:.8rem .9rem;border-radius:14px; border:1px solid rgba(120,120,160,.25);background:rgba(255,255,255,.92);}
         .input:focus{outline:none; border-color:rgba(108,99,255,.55); box-shadow:0 0 0 4px rgba(108,99,255,.18)}
         textarea.input{min-height:90px;resize:vertical}
         .alert{padding:.85rem 1rem;border-radius:14px;border:1px solid;margin-bottom:.8rem}
