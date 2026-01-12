@@ -149,7 +149,6 @@ try {
                 <tr>
                     <th>No.</th>
                     <th>Serial</th>
-                    <th>Company</th>
                     <th>Type</th>
                     <th>Model</th>
                     <th>Code</th>
@@ -169,7 +168,6 @@ try {
                         <tr>
                             <td><?= (int)($idx + 1) ?></td>
                             <td><b><?= htmlspecialchars($m["serialno"] ?? "") ?></b></td>
-                            <td><?= htmlspecialchars($m["companyname"] ?? "") ?></td>
                             <td><?= htmlspecialchars($m["equipmenttype"] ?? "") ?></td>
                             <td><?= htmlspecialchars($m["model"] ?? "") ?></td>
                             <td><?= htmlspecialchars($m["codeno"] ?? "") ?></td>
