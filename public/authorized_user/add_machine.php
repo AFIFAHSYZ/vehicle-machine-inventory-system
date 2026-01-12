@@ -136,20 +136,16 @@ $activeTab = $mode;
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
     <style>
         .tabs { display:flex; gap:.6rem; flex-wrap:wrap; }
-        .tab-btn{
-            display:inline-flex; align-items:center; gap:.45rem;
-            padding:.65rem 1rem; border-radius:999px; font-weight:900;
-            text-decoration:none; border:1px solid rgba(120,120,160,.25);
-            background:rgba(255,255,255,.75); color:#121726;
-        }
-        .tab-btn.active{
-            color:#fff;
-            border-color:transparent;
-            background: linear-gradient(135deg, var(--primary1), var(--primary2));
-        }
+        .tab-btn{display:inline-flex; align-items:center; gap:.45rem;padding:.65rem 1rem; border-radius:999px; font-weight:900;text-decoration:none; border:1px solid rgba(120,120,160,.25);background:rgba(255,255,255,.75); color:#121726;}
+        .tab-btn.active{color:#fff;border-color:transparent;background: linear-gradient(135deg, var(--primary1), var(--primary2));}
         .form-section{ margin-top:.8rem; }
         .hidden{ display:none; }
         .note{ color:var(--muted); font-size:.92rem; margin-top:.25rem; line-height:1.5; }
+                .alert{padding:.85rem 1rem;border-radius:14px;border:1px solid;margin-bottom:.8rem}
+        .alert.error{background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.25);color:#991b1b}
+        .alert.success{background:rgba(16,185,129,.10);border-color:rgba(16,185,129,.22);color:#065f46}
+        .actions-row{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+
     </style>
 </head>
 <body>
@@ -170,13 +166,13 @@ $activeTab = $mode;
                 <a class="tab-btn <?= $activeTab === "drill" ? "active" : "" ?>" href="add_machine.php?mode=drill">
                     <i class="fa-solid fa-person-digging"></i> Drill
                 </a>
-                <a class="btn secondary" href="machines_list.php">Back</a>
+                <a class="btn secondary" href="machine.php">Back</a>
             </div>
         </div>
 
         <div class="card">
-            <?php if ($error): ?><div class="alert alert-error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
-            <?php if ($success): ?><div class="alert alert-success"><?= htmlspecialchars($success) ?></div><?php endif; ?>
+            <?php if ($error): ?><div class="alert-error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
+            <?php if ($success): ?><div class="alert-success"><?= htmlspecialchars($success) ?></div><?php endif; ?>
 
             <!-- EQUIPMENT FORM -->
             <div class="form-section <?= $activeTab === "equipment" ? "" : "hidden" ?>">
@@ -205,11 +201,15 @@ $activeTab = $mode;
                         </div>
 
                         <div>
-                            <label>Equipment Type</label>
-                            <input class="input" name="equipmenttype" value="<?= htmlspecialchars($activeTab==="equipment" ? ($_POST["equipmenttype"] ?? "") : "") ?>"
-                                   placeholder="THEODOLITE / TOTAL STATION / DUMPING LEVEL">
+                        <label>Equipment Type</label>
+                        <select class="input" name="equipmenttype">
+                            <?php $eqType = ($activeTab==="equipment" ? (string)($_POST["equipmenttype"] ?? "") : ""); ?>
+                            <option value="">-- Select Equipment Type --</option>
+                            <option value="THEODOLITE" <?= $eqType==="THEODOLITE" ? "selected" : "" ?>>THEODOLITE</option>
+                            <option value="TOTAL STATION" <?= $eqType==="TOTAL STATION" ? "selected" : "" ?>>TOTAL STATION</option>
+                            <option value="DUMPING LEVEL" <?= $eqType==="DUMPING LEVEL" ? "selected" : "" ?>>DUMPING LEVEL</option>
+                        </select>
                         </div>
-
                         <div><label>Status</label><input class="input" name="status" value="<?= htmlspecialchars($activeTab==="equipment" ? ($_POST["status"] ?? "") : "") ?>"></div>
                         <div><label>Model</label><input class="input" name="model" value="<?= htmlspecialchars($activeTab==="equipment" ? ($_POST["model"] ?? "") : "") ?>"></div>
                         <div><label>Code No</label><input class="input" name="codeno" value="<?= htmlspecialchars($activeTab==="equipment" ? ($_POST["codeno"] ?? "") : "") ?>"></div>
@@ -221,7 +221,7 @@ $activeTab = $mode;
 
                     <div style="margin-top:1rem;display:flex;gap:.7rem;flex-wrap:wrap">
                         <button class="btn" type="submit">Save Equipment</button>
-                        <a class="btn secondary" href="machines_list.php">Cancel</a>
+                        <a class="btn secondary" href="machine .php">Cancel</a>
                     </div>
                 </form>
             </div>
