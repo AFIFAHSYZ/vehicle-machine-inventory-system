@@ -126,6 +126,18 @@ function fmtDateDMY($v): string {
         .badge.blue{ background: rgba(59,130,246,.12); border-color: rgba(59,130,246,.25); color:#1e40af; }
         .badge.gray{ background: rgba(107,114,128,.12); border-color: rgba(107,114,128,.25); color:#374151; }
         a.btn.secondary.compact{padding: .38rem .65rem;font-size: .84rem;border-radius: 12px;white-space: nowrap;}
+        /* Print button */
+        .btn.print{ background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.25); color:#1e40af; }
+
+        /* Print only the table area */
+        @media print{
+            body{ background:#fff !important; }
+            .app, .main{ padding:0 !important; }
+            .sidebar, .filters, .actions, .pagination, .btn, .header .sub, .count{ display:none !important; }
+            .card{ box-shadow:none !important; border:none !important; }
+            .tablewrap{ display:block !important; }
+            .tablewrap table{ width:100% !important; }
+        }
     </style>
 </head>
 <body>
@@ -142,7 +154,10 @@ function fmtDateDMY($v): string {
             <div class="actions">
                 <a class="btn" href="add_drill.php"><i class="fa-solid fa-plus"></i>&nbsp;Add Drill</a>
                 <a class="btn secondary" href="machine.php">&nbsp;View Machine</a>
-            </div>
+
+<a class="btn print" target="_blank" href="print_drill.php?<?= h(buildQuery(["page" => null])) ?>">
+  <i class="fa-solid fa-print"></i>&nbsp;Print
+</a>            </div>
         </div>
 
         <div class="card">
