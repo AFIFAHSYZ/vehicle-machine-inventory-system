@@ -95,28 +95,12 @@ $pendingDrills = $pdo->query("
     <style>
       .row-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;}
       .btn.sm{padding:.45rem .7rem;font-size:.85rem;border-radius:12px;font-weight:900;}
-      .btn.approve{background: linear-gradient(135deg, #16a34a, #22c55e);color:#fff;border:none;
-      }
-      .btn.reject{
-        background: linear-gradient(135deg, #b91c1c, #ef4444);
-        color:#fff;
-        border:none;
-      }
-      .btn.approve:hover,
-      .btn.reject:hover{
-        filter:brightness(0.95);
-        transform: translateY(-1px);
-        transition: .15s ease;
-      }
-      .btn.approve:active,
-      .btn.reject:active{
-        transform: translateY(0px);
-      }
-      .btn.approve i,
-      .btn.reject i{
-        margin-right:.35rem;
-      }
-      form{ margin:0; } /* prevents spacing bugs */
+      .btn.approve{background: linear-gradient(135deg, #16a34a, #22c55e);color:#fff;border:none;}
+      .btn.reject{background: linear-gradient(135deg, #b91c1c, #ef4444);color:#fff;border:none;}
+      .btn.approve:hover,.btn.reject:hover{filter:brightness(0.95);transform: translateY(-1px);transition: .15s ease;}
+      .btn.approve:active,.btn.reject:active{transform: translateY(0px);}
+      .btn.approve i,.btn.reject i{margin-right:.35rem;}
+      form{ margin:0; } 
     </style></head>
 <body>
 <div class="app">
