@@ -75,9 +75,12 @@ $dueStmt = $pdo->prepare("
   SELECT vehicleid, platenumber, roadtaxdue, insurancedue
   FROM vehicle
   WHERE
-    (roadtaxdue IS NOT NULL AND roadtaxdue <= CURRENT_DATE + (:days || ' days')::interval)
-    OR
-    (insurancedue IS NOT NULL AND insurancedue <= CURRENT_DATE + (:days || ' days')::interval)
+    UPPER(COALESCE(status,'')) = 'ACTIVE'
+    AND (
+      (roadtaxdue IS NOT NULL AND roadtaxdue <= CURRENT_DATE + (:days || ' days')::interval)
+      OR
+      (insurancedue IS NOT NULL AND insurancedue <= CURRENT_DATE + (:days || ' days')::interval)
+    )
 ");
 $dueStmt->execute([":days" => $DAYS_BEFORE]);
 $vehicles = $dueStmt->fetchAll(PDO::FETCH_ASSOC);
