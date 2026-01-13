@@ -157,7 +157,7 @@ function fmtDateDMY($v): string {
                 <a class="btn" href="add_drill.php"><i class="fa-solid fa-plus"></i>&nbsp;Add Drill</a>
                 <a class="btn secondary" href="machine.php">&nbsp;View Machine</a>
 
-<a class="btn print" target="_blank" href="print_drill.php?<?= h(buildQuery(["page" => null])) ?>">
+<a class="btn print" target="_blank" href="drill_print.php?<?= h(buildQuery(["page" => null])) ?>">
   <i class="fa-solid fa-print"></i>&nbsp;Print
 </a>            </div>
         </div>
