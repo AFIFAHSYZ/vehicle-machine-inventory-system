@@ -141,10 +141,16 @@ $activeTab = $mode;
         .form-section{ margin-top:.8rem; }
         .hidden{ display:none; }
         .note{ color:var(--muted); font-size:.92rem; margin-top:.25rem; line-height:1.5; }
-                .alert{padding:.85rem 1rem;border-radius:14px;border:1px solid;margin-bottom:.8rem}
+        .alert{padding:.85rem 1rem;border-radius:14px;border:1px solid;margin-bottom:.8rem}
         .alert.error{background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.25);color:#991b1b}
         .alert.success{background:rgba(16,185,129,.10);border-color:rgba(16,185,129,.22);color:#065f46}
         .actions-row{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem}
+        .badge{display:inline-block;padding: .18rem .55rem;border-radius: 999px;font-size: .78rem;font-weight: 900;letter-spacing: .3px;text-transform: uppercase;border: 1px solid rgba(120,120,160,.22);background: rgba(17,24,39,.06);color: #111827;white-space: nowrap;}
+        .badge.green{ background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.25); color:#065f46; }
+        .badge.red{ background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.25); color:#991b1b; }
+        .badge.orange{ background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.30); color:#92400e; }
+        .badge.blue{ background: rgba(59,130,246,.12); border-color: rgba(59,130,246,.25); color:#1e40af; }
+        .badge.gray{ background: rgba(107,114,128,.12); border-color: rgba(107,114,128,.25); color:#374151; }
 
     </style>
 </head>
@@ -155,13 +161,13 @@ $activeTab = $mode;
     <main class="main">
         <div class="header">
             <div>
-                <h2>Add Equipment / Drill</h2>
+                <h2>Add Machine</h2>
                 <div class="sub">Use tabs to add Equipment or Drill in the same page.</div>
             </div>
 
             <div class="tabs">
-                <a class="tab-btn <?= $activeTab === "equipment" ? "active" : "" ?>" href="add_machine.php?mode=equipment">
-                    <i class="fa-solid fa-screwdriver-wrench"></i> Equipment
+                <a class="tab-btn <?= $activeTab === "equipment" ? "active" : "" ?>" href="machine.php?mode=equipment">
+                    <i class="fa-solid fa-screwdriver-wrench"></i> Machine
                 </a>
                 <a class="tab-btn <?= $activeTab === "drill" ? "active" : "" ?>" href="add_machine.php?mode=drill">
                     <i class="fa-solid fa-person-digging"></i> Drill
@@ -171,12 +177,11 @@ $activeTab = $mode;
         </div>
 
         <div class="card">
-            <?php if ($error): ?><div class="alert-error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
-            <?php if ($success): ?><div class="alert-success"><?= htmlspecialchars($success) ?></div><?php endif; ?>
-
-            <!-- EQUIPMENT FORM -->
+        <?php if ($error): ?><div class="alert error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
+        <?php if ($success): ?><div class="alert success"><?= htmlspecialchars($success) ?></div><?php endif; ?>
+                <!-- EQUIPMENT FORM -->
             <div class="form-section <?= $activeTab === "equipment" ? "" : "hidden" ?>">
-                <h3 style="margin-bottom:.25rem">Equipment</h3>
+                <h3 style="margin-bottom:.25rem">Machine</h3>
                 <div class="note">For THEODOLITE, TOTAL STATION, DUMPING LEVEL, etc.</div>
 
                 <form method="POST" style="margin-top:.8rem">
@@ -221,7 +226,7 @@ $activeTab = $mode;
 
                     <div style="margin-top:1rem;display:flex;gap:.7rem;flex-wrap:wrap">
                         <button class="btn" type="submit">Save Equipment</button>
-                        <a class="btn secondary" href="machine .php">Cancel</a>
+                        <a class="btn secondary" href="machine.php">Cancel</a>
                     </div>
                 </form>
             </div>
