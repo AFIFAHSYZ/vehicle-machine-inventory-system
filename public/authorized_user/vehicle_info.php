@@ -148,7 +148,7 @@ $TYPE_OPTIONS   = ["CAR", "MOTOR"];
                         <span class="chip"><i class="fa-solid fa-id-card"></i> <b><?= h($vehicle["platenumber"]) ?></b></span>
                     </div>
                 <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;">
-                    <a class="btn secondary" href="drill.php"><i class="fa-solid fa-arrow-left"></i>&nbsp;Back</a>
+                    <a class="btn secondary" href="vehicle.php"><i class="fa-solid fa-arrow-left"></i>&nbsp;Back</a>
 
                     <form method="POST" style="margin:0" onsubmit="return confirm('Delete this drill record? This cannot be undone.');">
                         <input type="hidden" name="action" value="delete">
