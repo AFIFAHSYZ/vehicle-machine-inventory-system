@@ -138,6 +138,8 @@ function fmtDateDMY($v): string {
             .tablewrap{ display:block !important; }
             .tablewrap table{ width:100% !important; }
         }
+
+        
     </style>
 </head>
 <body>
