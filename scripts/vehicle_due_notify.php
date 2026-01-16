@@ -13,6 +13,12 @@ use PHPMailer\PHPMailer\PHPMailer;
 // =================== CONFIG ===================
 $DAYS_BEFORE = 30;
 
+/*
+  Exclude alerts for these company IDs.
+  Example: [3] means companyid=3 will NOT receive any due alerts.
+*/
+$EXCLUDE_COMPANY_IDS = [3];
+
 // Gmail SMTP settings
 $SMTP_HOST = "smtp.gmail.com";
 $SMTP_PORT = 587;
@@ -69,20 +75,36 @@ if (!$emails) {
   exit;
 }
 
-// 2) Vehicles due within 30 days OR overdue
-// (<= today + 30 days includes overdue too)
+/*
+  Build optional "NOT IN (...)" clause safely.
+  This assumes vehicle.companyid is an integer column.
+*/
+$excludeSql = "";
+$excludeParams = [];
+if (!empty($EXCLUDE_COMPANY_IDS)) {
+  $placeholders = [];
+  foreach (array_values($EXCLUDE_COMPANY_IDS) as $i => $cid) {
+    $ph = ":ex_company_" . $i;
+    $placeholders[] = $ph;
+    $excludeParams[$ph] = (int)$cid;
+  }
+  $excludeSql = " AND v.companyid NOT IN (" . implode(",", $placeholders) . ") ";
+}
+
+// 2) Vehicles due within 30 days OR overdue (excluding companyid 3)
 $dueStmt = $pdo->prepare("
-  SELECT vehicleid, platenumber, roadtaxdue, insurancedue
-  FROM vehicle
+  SELECT v.vehicleid, v.platenumber, v.roadtaxdue, v.insurancedue
+  FROM vehicle v
   WHERE
-    UPPER(COALESCE(status,'')) = 'ACTIVE'
+    UPPER(COALESCE(v.status,'')) = 'ACTIVE'
+    {$excludeSql}
     AND (
-      (roadtaxdue IS NOT NULL AND roadtaxdue <= CURRENT_DATE + (:days || ' days')::interval)
+      (v.roadtaxdue IS NOT NULL AND v.roadtaxdue <= CURRENT_DATE + (:days || ' days')::interval)
       OR
-      (insurancedue IS NOT NULL AND insurancedue <= CURRENT_DATE + (:days || ' days')::interval)
+      (v.insurancedue IS NOT NULL AND v.insurancedue <= CURRENT_DATE + (:days || ' days')::interval)
     )
 ");
-$dueStmt->execute([":days" => $DAYS_BEFORE]);
+$dueStmt->execute(array_merge([":days" => $DAYS_BEFORE], $excludeParams));
 $vehicles = $dueStmt->fetchAll(PDO::FETCH_ASSOC);
 
 if (!$vehicles) {
@@ -103,19 +125,20 @@ foreach ($vehicles as $v) {
     $dueItems[] = ["type" => "insurance", "label" => "Insurance", "date" => $v["insurancedue"]];
   }
 
-foreach ($dueItems as $item) {
-  $type = $item["type"];
-  $dueDate = $item["date"];
+  foreach ($dueItems as $item) {
+    $type = $item["type"];
+    $dueDate = $item["date"];
 
-  // Only alert if THIS due date is within 30 days (or overdue)
-  $dueTs = strtotime($dueDate);
-  $todayTs = strtotime($today);
-  $limitTs = strtotime("+{$DAYS_BEFORE} days", $todayTs);
+    // Only alert if THIS due date is within 30 days (or overdue)
+    $dueTs = strtotime($dueDate);
+    $todayTs = strtotime($today);
+    $limitTs = strtotime("+{$DAYS_BEFORE} days", $todayTs);
 
-  if ($dueTs === false) continue;
-  if ($dueTs > $limitTs) continue; // not due within 30 days, skip
+    if ($dueTs === false) continue;
+    if ($dueTs > $limitTs) continue; // not due within 30 days, skip
 
-  $isOverdue = ($dueTs < $todayTs);
+    $isOverdue = ($dueTs < $todayTs);
+
     foreach ($emails as $to) {
       // prevent duplicate alerts for same due date
       $check = $pdo->prepare("
