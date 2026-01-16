@@ -83,38 +83,14 @@ function h($v){ return htmlspecialchars((string)$v); }
     <style>
         /* compact table */
         .tablewrap table{ width:100%; border-collapse:collapse; }
-        .tablewrap thead th{
-            padding:.45rem .55rem;
-            font-size:.78rem;
-            white-space:nowrap;
-        }
-        .tablewrap tbody td{
-            padding:.38rem .55rem;
-            font-size:.84rem;
-            vertical-align:middle;
-        }
+        .tablewrap thead th{padding:.45rem .55rem;font-size:.78rem;white-space:nowrap;}
+        .tablewrap tbody td{padding:.38rem .55rem;font-size:.84rem;vertical-align:middle;}
         .tablewrap tbody tr:hover{ background: rgba(108,99,255,.06); }
-
-        .td-ellipsis{
-            max-width: 170px;
-            overflow:hidden;
-            text-overflow:ellipsis;
-            white-space:nowrap;
-        }
-
-        .btn.compact{
-            padding:.32rem .55rem !important;
-            font-size:.78rem !important;
-            border-radius:12px;
-            white-space:nowrap;
-        }
-
+        .td-ellipsis{max-width: 170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .btn.compact{padding:.32rem .55rem !important;font-size:.78rem !important;border-radius:12px;white-space:nowrap;}
         /* print: hide controls */
-        @media print{
-            .no-print{ display:none !important; }
-            .card{ box-shadow:none !important; }
-        }
-                a.btn.secondary.compact{padding: .38rem .65rem;font-size: .84rem;border-radius: 12px;white-space: nowrap;}
+        @media print{.no-print{ display:none !important; }.card{ box-shadow:none !important; }}
+        a.btn.secondary.compact{padding: .38rem .65rem;font-size: .84rem;border-radius: 12px;white-space: nowrap;}
         /* Print button */
         .btn.print{ background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.25); color:#1e40af; }
 
