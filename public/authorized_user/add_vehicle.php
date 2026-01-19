@@ -13,8 +13,8 @@ $userId = $_SESSION["userid"] ?? null;
 $companies = $pdo->query("SELECT companyid, companyname FROM company ORDER BY companyname ASC")
     ->fetchAll(PDO::FETCH_ASSOC);
 
-$STATUS_OPTIONS = ["IN USE", "DAMAGE", "DISPOSAL", "SOLD", "LOST"];
-$TYPE_OPTIONS   = ["CAR", "MOTOR"];
+$STATUS_OPTIONS = ["ACTIVE", "INACTIVE", "DAMAGE", "DISPOSAL", "SOLD", "LOST"];
+$TYPE_OPTIONS   = ["CAR", "MOTORCYCLE"];
 
 function upper($s): string {
     $s = trim((string)$s);
