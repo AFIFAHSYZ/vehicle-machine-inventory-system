@@ -113,8 +113,8 @@ function valOrDash($v){
     return $v === "" ? "—" : h($v);
 }
 
-$STATUS_OPTIONS = ["IN USE", "DAMAGE", "DISPOSAL", "SOLD", "LOST"];
-$TYPE_OPTIONS   = ["CAR", "MOTOR"];
+$STATUS_OPTIONS = ["ACTIVE", "INACTIVE", "DAMAGE", "DISPOSAL", "SOLD", "LOST"];
+$TYPE_OPTIONS   = ["CAR", "MOTORCYCLE"];
 ?>
 <!DOCTYPE html>
 <html lang="en">
