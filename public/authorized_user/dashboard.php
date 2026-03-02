@@ -68,6 +68,15 @@ $email    = $_SESSION["email"] ?? "";
                     </div>
                 </div>
 
+                <div class="card">
+                    <h4>Drills</h4>
+                    <p>Browse approved drill records and submit new drill entries.</p>
+                    <div class="actions">
+                        <a class="btn" href="drill.php">View</a>
+                        <a class="btn secondary" href="add_drill.php">Submit</a>
+                    </div>
+                </div>
+
             </div>
 
             <div class="footer">
