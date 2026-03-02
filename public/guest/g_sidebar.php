@@ -39,8 +39,19 @@
             <span class="icon"><i class="fa-solid fa-plus"></i></span>
             <span>Add Machine</span>
         </a>
-    </nav>
 
+        <a href="view_drill.php"
+           class="<?= $currentPage === 'view_drill.php' ? 'active' : '' ?>">
+            <span class="icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+            <span>Drill</span>
+        </a>
+
+        <a href="add_drill.php"
+           class="<?= $currentPage === 'add_drill.php' ? 'active' : '' ?>">
+            <span class="icon"><i class="fa-solid fa-plus"></i></span>
+            <span>Add Drill</span>
+        </a>
+    </nav>
     <div class="sidebar-footer">
         <div class="pill">
             <span>Access level</span>
