@@ -1,25 +1,46 @@
 <?php
 session_start();
+$_SESSION['role'] = 'guest';
+
 require_once __DIR__ . "/../../config/db.php";
 
-/**
- * Guest browse page (approved only)
- * - Shows only equipment.approvalstatus = 'approved'
- * - Includes sidebar
- */
-
-$_SESSION["role"] = $_SESSION["role"] ?? "guest";
+$currentPage = basename($_SERVER["PHP_SELF"]);
 
 $q = trim($_GET["q"] ?? "");
-$companyId = (int)($_GET["company_id"] ?? 0);
 $type = trim($_GET["type"] ?? "");
+$msg = trim((string)($_GET["msg"] ?? ""));
+
+/* PAGINATION (10 per page) */
+$page = max(1, (int)($_GET["page"] ?? 1));
+$perPage = 10;
+$offset = ($page - 1) * $perPage;
+
+function h($v){ return htmlspecialchars((string)$v); }
+function fmtDateDMY($v): string {
+    if (!$v) return "—";
+    try { return (new DateTime((string)$v))->format("d-m-Y"); }
+    catch (Throwable $e) { return "—"; }
+}
+function badgeClassStatus(string $status): string {
+    $s = strtoupper(trim($status));
+    return match ($s) {
+        "IN USE"   => "badge green",
+        "DAMAGE"   => "badge red",
+        "DISPOSAL" => "badge gray",
+        "SOLD"     => "badge blue",
+        "LOST"     => "badge orange",
+        default    => "badge",
+    };
+}
+function buildQuery(array $extra = []): string {
+    $base = $_GET;
+    foreach ($extra as $k => $v) {
+        if ($v === null) unset($base[$k]); else $base[$k] = $v;
+    }
+    return http_build_query($base);
+}
 
 try {
-    // Company dropdown
-    $companies = $pdo->query("SELECT companyid, companyname FROM company ORDER BY companyname ASC")
-        ->fetchAll(PDO::FETCH_ASSOC);
-
-    // Equipment types dropdown
     $types = $pdo->query("
         SELECT DISTINCT equipmenttype
         FROM equipment
@@ -27,42 +48,17 @@ try {
         ORDER BY equipmenttype ASC
     ")->fetchAll(PDO::FETCH_COLUMN);
 
-    $sql = "
-        SELECT
-            e.equipmentid,
-            e.serialno,
-            e.model,
-            e.codeno,
-            e.equipmenttype,
-            e.datecalibration,
-            e.nextcalibration,
-            e.certificationno,
-            e.location,
-            e.status,
-            e.createddate,
-            e.updateddate,
-            c.companyname,
-            d.markingno
-        FROM equipment e
-        JOIN company c ON c.companyid = e.companyid
-        LEFT JOIN drillspecifics d ON d.drillid = e.equipmentid
-        WHERE e.approvalstatus = 'approved'
-    ";
-
+    /* WHERE + PARAMS */
+    $where = ["1=1"];
     $params = [];
 
-    if ($companyId > 0) {
-        $sql .= " AND e.companyid = :companyid";
-        $params[":companyid"] = $companyId;
-    }
-
     if ($type !== "") {
-        $sql .= " AND COALESCE(e.equipmenttype,'') = :type";
+        $where[] = "COALESCE(e.equipmenttype,'') = :type";
         $params[":type"] = $type;
     }
 
     if ($q !== "") {
-        $sql .= " AND (
+        $where[] = "(
             e.serialno ILIKE :q
             OR COALESCE(e.model,'') ILIKE :q
             OR COALESCE(e.codeno,'') ILIKE :q
@@ -70,13 +66,36 @@ try {
             OR COALESCE(e.status,'') ILIKE :q
             OR COALESCE(e.equipmenttype,'') ILIKE :q
             OR COALESCE(e.certificationno,'') ILIKE :q
-            OR COALESCE(d.markingno,'') ILIKE :q
         )";
         $params[":q"] = "%{$q}%";
     }
 
-    $sql .= " ORDER BY e.updateddate DESC NULLS LAST, e.createddate DESC NULLS LAST, e.equipmentid DESC";
+    $whereSql = "WHERE " . implode(" AND ", $where);
 
+    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM equipment e {$whereSql}");
+    $countStmt->execute($params);
+    $total = (int)$countStmt->fetchColumn();
+    $totalPages = max(1, (int)ceil($total / $perPage));
+
+    $sql = "
+        SELECT
+            e.equipmentid,
+            e.serialno,
+            e.model,
+            e.codeno,
+            e.datecalibration,
+            e.nextcalibration,
+            e.certificationno,
+            e.location,
+            e.status,
+            e.equipmenttype,
+            e.createddate,
+            e.updateddate
+        FROM equipment e
+        {$whereSql}
+        ORDER BY e.updateddate DESC NULLS LAST, e.createddate DESC NULLS LAST, e.equipmentid DESC
+        LIMIT {$perPage} OFFSET {$offset}
+    ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $machines = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -90,53 +109,72 @@ try {
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>View Machines | Vehicle & Machine Inventory</title>
-        <link rel="stylesheet" href="../../css/guest_style.css">
+    <title>Machines | Authorized</title>
+
+    <link rel="stylesheet" href="../../css/guest_style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
 
+    <style>
+        .badge{display:inline-block;padding:.18rem .55rem;border-radius:999px;font-size:.78rem;font-weight:900;letter-spacing:.3px;text-transform:uppercase;border:1px solid rgba(120,120,160,.22);background:rgba(17,24,39,.06);color:#111827;white-space:nowrap;}
+        .badge.green{ background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.25); color:#065f46; }
+        .badge.red{ background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.25); color:#991b1b; }
+        .badge.orange{ background:rgba(245,158,11,.14); border-color:rgba(245,158,11,.30); color:#92400e; }
+        .badge.blue{ background:rgba(59,130,246,.12); border-color:rgba(59,130,246,.25); color:#1e40af; }
+        .badge.gray{ background:rgba(231, 34, 4, 0.33); border-color:rgba(218, 78, 19, 0.25); color:#374151; }
+
+        a.btn.secondary.compact{padding: .38rem .65rem;font-size: .84rem;border-radius: 12px;white-space: nowrap;}
+        /* Print button */
+        .btn.print{ background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.25); color:#1e40af; }
+
+        .alert{padding:.85rem 1rem;border-radius:14px;border:1px solid;margin-bottom:.8rem}
+        .alert.success{background:rgba(16,185,129,.10);border-color:rgba(16,185,129,.22);color:#065f46}
+        .alert.error{background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.25);color:#991b1b}
+
+        .pagination{display:flex;justify-content:space-between;align-items:center;gap:.8rem;margin-top:1rem;flex-wrap:wrap}
+        .page-links{display:flex;gap:.35rem;flex-wrap:wrap}
+        .page-btn{padding:.38rem .65rem;border-radius:12px;border:1px solid rgba(120,120,160,.25);text-decoration:none;color:#111827;background:rgba(255,255,255,.75);font-weight:800}
+        .page-btn.active{background: linear-gradient(135deg, var(--primary1), var(--primary2));color:#fff;border-color:transparent}
+        .page-btn.disabled{opacity:.45;pointer-events:none}
+    </style>
 </head>
 <body>
 <div class="app">
-<?php include "g_sidebar.php"; ?>
+    <?php include "g_sidebar.php"; ?>
 
     <main class="main">
         <div class="header">
             <div>
                 <h2>Machines / Equipment</h2>
-                <div class="sub">Browsing approved equipment only.</div>
+                <div class="sub">Equipment list (Theodolite, Total Station, Dumping Level, etc.).</div>
             </div>
-            <div class="actions">
-                <a class="btn secondary" href="add_machine.php">Submit New</a>
+
+            <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+                <a class="btn secondary" href="add_machine.php">Add Machine</a>
+                <a class="btn" href="view_drill.php">View Drills</a>
             </div>
         </div>
 
         <div class="card">
+            <?php if ($msg === "deleted"): ?>
+                <div class="alert success">Deleted successfully.</div>
+            <?php elseif ($msg === "delete_failed"): ?>
+                <div class="alert error">Delete failed. Please try again.</div>
+            <?php endif; ?>
+
             <form class="filters" method="GET">
                 <div>
-                    <label for="q">Search</label>
-                    <input class="input" id="q" name="q" value="<?= htmlspecialchars($q) ?>"
-                           placeholder="Serial no, model, code no, type, location, status..." />
+                    <label>Search</label>
+                    <input class="input" name="q" value="<?= h($q) ?>"
+                    placeholder="Serial, model, code, certification, location..." />
                 </div>
 
                 <div>
-                    <label for="company_id">Company</label>
-                    <select class="input" id="company_id" name="company_id">
-                        <option value="0">All companies</option>
-                        <?php foreach ($companies as $c): ?>
-                            <option value="<?= (int)$c["companyid"] ?>" <?= $companyId === (int)$c["companyid"] ? "selected" : "" ?>>
-                                <?= htmlspecialchars($c["companyname"]) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="type">Equipment Type</label>
-                    <select class="input" id="type" name="type">
-                        <option value="">All types</option>
+                    <label>Type</label>
+                    <select class="input" name="type">
+                        <option value="">All</option>
                         <?php foreach ($types as $t): ?>
-                            <option value="<?= htmlspecialchars($t) ?>" <?= $type === $t ? "selected" : "" ?>>
-                                <?= htmlspecialchars($t) ?>
+                            <option value="<?= h($t) ?>" <?= $type === $t ? "selected" : "" ?>>
+                                <?= h($t) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -147,60 +185,105 @@ try {
                 </div>
             </form>
 
-            <div class="count">Showing <strong><?= count($machines) ?></strong> approved record(s)</div>
-
-            <div class="tablewrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Serial No</th>
-                            <th>Company</th>
-                            <th>Type</th>
-                            <th>Model</th>
-                            <th>Code No</th>
-                            <th>Status</th>
-                            <th>Location</th>
-                            <th>Calibration</th>
-                            <th>Next Calibration</th>
-                            <th>Certification</th>
-                            <th>Drill Marking</th>
-                            <th>Updated</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    <?php if (!$machines): ?>
-                        <tr><td colspan="12" class="muted">No approved machines/equipment found.</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($machines as $m): ?>
-                            <tr>
-                                <td><strong><?= htmlspecialchars($m["serialno"]) ?></strong></td>
-                                <td><?= htmlspecialchars($m["companyname"] ?? "") ?></td>
-                                <td><?= htmlspecialchars($m["equipmenttype"] ?? "") ?></td>
-                                <td><?= htmlspecialchars($m["model"] ?? "") ?></td>
-                                <td><?= htmlspecialchars($m["codeno"] ?? "") ?></td>
-                                <td>
-                                    <?php if (!empty($m["status"])): ?>
-                                        <span class="statuspill"><?= htmlspecialchars($m["status"]) ?></span>
-                                    <?php else: ?>
-                                        <span class="muted">—</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?= htmlspecialchars($m["location"] ?? "") ?></td>
-                                <td><?= htmlspecialchars($m["datecalibration"] ?? "") ?></td>
-                                <td><?= htmlspecialchars($m["nextcalibration"] ?? "") ?></td>
-                                <td><?= htmlspecialchars($m["certificationno"] ?? "") ?></td>
-                                <td><?= htmlspecialchars($m["markingno"] ?? "") ?></td>
-                                <td><?= htmlspecialchars($m["updateddate"] ?? $m["createddate"] ?? "") ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                    </tbody>
-                </table>
+            <div style="margin:.8rem 0;color:var(--muted);font-size:.92rem">
+                Showing <b><?= count($machines) ?></b> of <b><?= (int)$total ?></b> record(s)
             </div>
-        </div>
 
-        <div class="count" style="text-align:center;margin-top:1rem;">
-            &copy; <?= date('Y') ?> Vehicle and Machine Inventory System
+            <?php if ($totalPages > 1): ?>
+                <div class="pagination">
+                    <div>Page <b><?= (int)$page ?></b> of <b><?= (int)$totalPages ?></b></div>
+                    <div class="page-links">
+                        <?php
+                          $prevDisabled = $page <= 1;
+                          $nextDisabled = $page >= $totalPages;
+
+                          $prevHref = "view_machine.php?" . buildQuery(["page" => max(1, $page - 1)]);
+                          $nextHref = "view_machine.php?" . buildQuery(["page" => min($totalPages, $page + 1)]);
+                        ?>
+                        <a class="page-btn <?= $prevDisabled ? "disabled" : "" ?>" href="<?= $prevDisabled ? "#" : h($prevHref) ?>">Prev</a>
+
+                        <?php
+                          $start = max(1, $page - 2);
+                          $end = min($totalPages, $page + 2);
+                          for ($p = $start; $p <= $end; $p++):
+                            $href = "view_machine.php?" . buildQuery(["page" => $p]);
+                        ?>
+                          <a class="page-btn <?= $p === $page ? "active" : "" ?>" href="<?= h($href) ?>"><?= (int)$p ?></a>
+                        <?php endfor; ?>
+
+                        <a class="page-btn <?= $nextDisabled ? "disabled" : "" ?>" href="<?= $nextDisabled ? "#" : h($nextHref) ?>">Next</a>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <br>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Serial</th>
+                    <th>Type</th>
+                    <th>Model</th>
+                    <th>Code</th>
+                    <th>Status</th>
+                    <th>Location</th>
+                    <th>Calibration</th>
+                    <th>Next Calibration</th>
+                    <th>Certification</th>
+                    <th>Updated</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if (!$machines): ?>
+                    <tr><td colspan="12" class="muted">No records found.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($machines as $idx => $m): ?>
+                        <?php $st = strtoupper((string)($m["status"] ?? "")); ?>
+                        <tr>
+                            <td><?= (int)($offset + $idx + 1) ?></td>
+                            <td><b><?= h($m["serialno"] ?? "") ?></b></td>
+                            <td><?= h($m["equipmenttype"] ?? "") ?></td>
+                            <td><?= h($m["model"] ?? "") ?></td>
+                            <td><?= h($m["codeno"] ?? "") ?></td>
+                            <td><span class="<?= h(badgeClassStatus($st)) ?>"><?= h($st ?: "—") ?></span></td>
+                            <td><?= h($m["location"] ?? "") ?></td>
+                            <td><?= h(fmtDateDMY($m["datecalibration"] ?? null)) ?></td>
+                            <td><?= h(fmtDateDMY($m["nextcalibration"] ?? null)) ?></td>
+                            <td><?= h($m["certificationno"] ?? "") ?></td>
+                            <td><?= h(fmtDateDMY($m["updateddate"] ?? $m["createddate"] ?? null)) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+
+            <?php if ($totalPages > 1): ?>
+                <div class="pagination">
+                    <div>Page <b><?= (int)$page ?></b> of <b><?= (int)$totalPages ?></b></div>
+                    <div class="page-links">
+                        <?php
+                          $prevDisabled = $page <= 1;
+                          $nextDisabled = $page >= $totalPages;
+
+                          $prevHref = "view_machine.php?" . buildQuery(["page" => max(1, $page - 1)]);
+                          $nextHref = "view_machine.php?" . buildQuery(["page" => min($totalPages, $page + 1)]);
+                        ?>
+                        <a class="page-btn <?= $prevDisabled ? "disabled" : "" ?>" href="<?= $prevDisabled ? "#" : h($prevHref) ?>">Prev</a>
+
+                        <?php
+                          $start = max(1, $page - 2);
+                          $end = min($totalPages, $page + 2);
+                          for ($p = $start; $p <= $end; $p++):
+                            $href = "view_machine.php?" . buildQuery(["page" => $p]);
+                        ?>
+                          <a class="page-btn <?= $p === $page ? "active" : "" ?>" href="<?= h($href) ?>"><?= (int)$p ?></a>
+                        <?php endfor; ?>
+
+                        <a class="page-btn <?= $nextDisabled ? "disabled" : "" ?>" href="<?= $nextDisabled ? "#" : h($nextHref) ?>">Next</a>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </main>
 </div>
