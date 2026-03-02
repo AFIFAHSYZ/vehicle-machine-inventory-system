@@ -35,7 +35,7 @@ $_SESSION['role'] = 'guest';
                 <h3>Welcome, Guest</h3>
                 <p>
                     Explore vehicles and equipment currently registered in the system.
-                    To manage inventory (add/edit/delete), please log in with an authorized account.
+                    To manage inventory (edit/delete), please log in with an authorized account.
                 </p>
             </div>
 
@@ -63,8 +63,8 @@ $_SESSION['role'] = 'guest';
                 <article class="card">
                     <div class="mini">
                         <div>
-                            <h4>Inventory Summary</h4>
-                            <p>See a quick overview of inventory data.</p>
+                            <h4>Drill</h4>
+                            <p>View drill information and specifications.</p>
                         </div>
                         <span class="chip">Read-only</span>
                     </div>
